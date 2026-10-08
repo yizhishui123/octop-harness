@@ -120,6 +120,11 @@ dev = [
     "octop-browser>=0.9.9",
     "langfuse>=4.9.0",
 ]
+# Learning notebooks (learning/) — offline study material, not shipped
+learning = [
+    "jupyterlab>=4",
+    "ipykernel>=6",
+]
 
 # ---------------------------------------------------------------------------
 # Build (hatch)
