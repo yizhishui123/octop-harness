@@ -2,6 +2,7 @@
 # # 10 · 沙箱二:bwrap 监禁解剖(Linux 真隔离)
 #
 # **学习目标**
+#
 # - 理解 `BubbledLocalShellBackend` 的**门控条件**(Linux + virtual_mode + 非宿主 root + bwrap);
 # - 逐段解剖 `build_bwrap_argv`:bind / ro-bind / dev / proc / tmpfs / chdir;
 # - 看懂 **jail 内 cwd 对齐**(`pwd` 打印虚拟工作区路径)与 **skills 额外挂载**;

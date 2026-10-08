@@ -2,6 +2,7 @@
 # # 06 · `BackendWorkspace`:L1 唯一 I/O 门面
 #
 # **学习目标**
+#
 # - 记住 L0-L3 分层与"哪类 I/O 走哪条路"的判定表——这是本仓库最重要的模块边界;
 # - 亲手实验 `resolve_path` 速查表的每一行(相对 / 绝对 / `~` / 越界);
 # - 体验 **materialize 多层回退**:`write_file("/gen/x") + execute(...)` 之后,内容怎么被读回来;

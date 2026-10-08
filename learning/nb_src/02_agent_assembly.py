@@ -2,6 +2,7 @@
 # # 02 · HarnessAgent 组装流水线
 #
 # **学习目标**
+#
 # - 逐行读懂 `HarnessAgent.__init__` 的装配顺序——它就是整个库的骨架目录;
 # - 弄清 `_build_tools` / `_build_middleware` / `_build_graph` 三大子装配;
 # - 建立 **路径双轴模型**(`workspace_dir` vs `root_dir`)的直觉——本库大半的"玄学"都源于这两根轴;
@@ -118,6 +119,7 @@ print("graph 节点:", list(agent.graph.nodes))
 # **不要**把它们当"两棵对等的树"。agent 只看到路径约定;`root_dir` 是实现细节。
 #
 # 工厂规则(`backends/__init__.py`):
+#
 # - spec **没固定** `root_dir` → 用 `workspace_dir` 填充 → 虚拟 `/` 与工作区对齐(**推荐**);
 # - 默认 spec 固定 `root_dir="/"` → 看到整台机器;
 # - 云后端(s3/postgres/cos/oss/obs)**无视** `root_dir`,有自己的编址。
@@ -159,6 +161,7 @@ for fragment in ("AGENTS.md", "/SOUL.md", "~/x.md"):
 # ## 3. `_build_tools`:工具从哪来
 #
 # `agent.py:1341-1370`。分四档:
+#
 # 1. **永远有**:current_time / web_fetch / browser_use / desktop_screenshot / send_file_to_user / env_file 工具;
 # 2. **按配置**:`load_web_search_tools(cfg.web_search_tools)`、ask_user、媒体生成、记忆工具;
 # 3. **用户自带**:`cfg.tools`;
@@ -201,6 +204,7 @@ show("src/octop_harness/agent.py", 1559, 1564)   # Bootstrap 插入 index 0
 # ## 5. `_build_graph`:交给 deepagents 编译
 #
 # `agent.py:1663-1767`。要点:
+#
 # - 系统提示 = `cfg.system_prompt` + **硬编码的工作目录指令**(:1687-1698)+ 媒体策略 + 技能提示;
 # - `subagents` 经 `_resolve_subagents`(:1619)合并工作区 `agents/**/*.md` 与 `cfg.subagents`,
 #   并**剥离 MCP 工具与 ask_user_question**——子图不跑父级中间件/HITL,带着这些工具会出事故;
@@ -216,6 +220,7 @@ show("src/octop_harness/agent.py", 1740, 1764)
 # ## 6. checkpointer 三级选择
 #
 # `_resolve_checkpointer`(`agent.py:1788`):
+#
 # 1. `cfg.checkpointer = False` → 显式关闭;
 # 2. 用户传入实例 → 直接用;
 # 3. **记忆开启时:直接复用 `Memory` 实例当 checkpointer**——SQLite 一库两用,检查点与记忆共享同一份真相(`agent.py:1812`);

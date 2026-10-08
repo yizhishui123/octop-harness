@@ -2,6 +2,7 @@
 # # 01 · 配置体系与核心理念
 #
 # **学习目标**
+#
 # - 吃透配置三件套 `HarnessAgentConfig` / `ProviderConfig` / `ModelConfig` 的结构与关系;
 # - 理解 frozen dataclass 的序列化契约(`to_dict` / `from_dict` / `_unserializable_fields`);
 # - 掌握 provider 的三个来源:显式配置、环境变量探测、JSON 预设;
@@ -72,6 +73,7 @@ for name in INTERESTING:
 # ## 2. frozen:配置对象不可变
 #
 # `HarnessAgentConfig` 是 **frozen dataclass**——实例化后不能改字段。这带来两个后果:
+#
 # 1. 配置可以被安全地共享、缓存、比较;
 # 2. "改配置"只能通过 `dataclasses.replace()` 生成新对象(热更新时就是这么做的)。
 
