@@ -1,0 +1,8 @@
+# Notebook 实验工作区(所有 notebook 的 scratch 目录,不进版本库)
+.workspaces/
+
+# Jupyter 自动检查点
+.ipynb_checkpoints/
+
+# Python 缓存
+__pycache__/
