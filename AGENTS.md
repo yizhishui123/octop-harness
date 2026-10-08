@@ -1,269 +1,270 @@
 # AGENTS.md
 
-Working handbook for AI coding agents in the `octop-harness` repository.
+`octop-harness` 仓库的 AI 编码代理(Agent)工作手册。
 
-> This file is **how to change this repo**. `src/octop_harness/builtin/md_files/AGENTS.md` (shipped in the library and copied into end-user workspaces) is **how to use the agent this library creates**. They are not the same document — do not mix them.
+> 本文件是**如何修改本仓库**的说明。`src/octop_harness/builtin/md_files/AGENTS.md`(随库发布、并复制到终端用户工作区)是**如何使用本库创建的 agent** 的说明。两者不是同一份文档——不要混淆。
 
-## 1. Collaboration principles
+## 1. 协作原则
 
-> Favor caution over speed; trivial tasks may relax these rules. These principles complement [§12 Change workflow](#12-change-workflow) and [§13 Communication](#13-communication).
+> 谨慎优先于速度;琐碎任务可适当放宽。本节与 [§12 变更流程](#12-变更流程)、[§13 沟通规范](#13-沟通规范)互为补充。
 
-### Think before writing
+### 先想后写
 
-- Read first: the docstring of the file you will change, neighboring implementations, and related specs.
-- State assumptions up front; ask when unsure — do not guess. When several interpretations exist, list them and let the user choose — do not pick one silently.
-- Suggest simpler approaches when they exist; push back when appropriate.
-- Stop when blocked; name exactly what is unclear.
+- 先读:要改动文件的 docstring、相邻实现、相关规格说明。
+- 假设要提前说明;不确定就问——不要猜。存在多种解释时,把它们列出来让用户选择——不要默默选定一种。
+- 有更简单的方案就提出;必要时据理力争。
+- 被卡住就停下;明确说清哪里不明白。
 
-### Simplicity first
+### 简单优先
 
-- Write the minimum code that solves the problem; no unrequested features, abstractions, or config knobs.
-- Do not add defensive error handling for scenarios that cannot realistically happen.
-- Trim the diff when it grows unnecessarily large.
+- 写解决问题的最少代码;不做未要求的功能、抽象或配置项。
+- 不为不可能发生的场景添加防御性错误处理。
+- diff 不必要地变大时要裁剪。
 
-### Surgical edits
+### 外科手术式修改
 
-- Touch only lines directly related to the task; do not opportunistically "clean up" nearby code, comments, or formatting.
-- Do not refactor working code or unify style just because it differs from yours.
-- Unrelated dead code: mention it, do not delete it proactively.
-- Remove orphan imports, variables, and functions **you** introduced.
+- 只碰与任务直接相关的行;不要顺手"清理"附近的代码、注释或格式。
+- 不要因为工作代码的风格与你不同就重构或统一风格。
+- 无关的死代码:提一句,不要主动删除。
+- 清理**你自己**引入的孤儿 import、变量和函数。
 
-### Verifiable outcomes
+### 可验证的结果
 
-| Task | Plan | Verify |
-|------|------|--------|
-| Bug fix | Write a failing test that reproduces → fix → run the suite | New test fails before the fix; `make test` passes after |
-| New public API | Export from `__all__` in `__init__.py` → implement + docstring + tests + mention in README | `make all` green |
-| Behavior change | Add/change tests first → then change the implementation | Targeted `pytest`, then `make all` |
-| Refactor | `make test` before → refactor → `make test` after | Zero behavior change unless requested |
+| 任务 | 计划 | 验证 |
+|------|------|------|
+| Bug 修复 | 先写一个能复现的失败测试 → 修复 → 跑套件 | 修复前新测试失败;修复后 `make test` 通过 |
+| 新公共 API | 从 `__init__.py` 的 `__all__` 导出 → 实现 + docstring + 测试 + README 提及 | `make all` 绿 |
+| 行为变更 | 先增/改测试 → 再改实现 | 定向 `pytest`,然后 `make all` |
+| 重构 | 重构前 `make test` → 重构 → 重构后 `make test` | 除非另有要求,行为零变化 |
 
-**Ship bar: `make all` green** (format + lint + typecheck + test — exactly what the pre-commit hook runs). For multi-step work, sketch a short plan:
+**交付标准:`make all` 全绿**(format + lint + typecheck + test——与 pre-commit 钩子运行的内容完全一致)。多步工作先拟一个简短计划:
 
 ```
-1. Read resolve_path in backends/workspace.py → verify: understand root_dir vs workspace_dir
-2. Implement xxx → verify: pytest tests/test_backends_utils.py -k xxx
-3. Run the full gate → verify: make all
+1. 读 backends/workspace.py 的 resolve_path → 验证:理解 root_dir 与 workspace_dir 的区别
+2. 实现 xxx → 验证:pytest tests/test_backends_utils.py -k xxx
+3. 跑完整门禁 → 验证:make all
 ```
 
-## 2. What this is
+## 2. 这是什么
 
-`octop-harness` is a published Python library (`pip install octop-harness`). It is a moderate wrapper around [LangChain Deep Agents](https://docs.langchain.com/oss/python/deepagents/) so users can create production-grade agents with very little code.
+`octop-harness` 是一个已发布的 Python 库(`pip install octop-harness`)。它是 [LangChain Deep Agents](https://docs.langchain.com/oss/python/deepagents/) 的适度封装,让用户用极少的代码创建生产级 agent。
 
-**It is a library, not an application.** Anything that looks like application-layer functionality (cron, MBTI onboarding, vector-memory persistence, HTTP server, user login, UI) does not belong here — those belong in hosts such as `Octop`. `octop-harness` provides the agent runtime; `octop-gateway` (the IM bridge) and Octop (the self-hosted platform) assemble applications on top of it.
+**它是库,不是应用。** 任何看起来像应用层的功能(cron、MBTI 引导、向量记忆持久化、HTTP 服务器、用户登录、UI)都不属于这里——它们属于 Octop 等宿主。`octop-harness` 提供 agent 运行时;`octop-gateway`(IM 桥)和 Octop(自托管平台)在其上组装应用。
 
-## 3. Tech stack
+## 3. 技术栈
 
-| Layer | Technology |
+| 层 | 技术 |
 |-------|------------|
-| Language | Python 3.12+; every source file has `from __future__ import annotations` |
-| Agent runtime | `deepagents>=0.7,<0.8` + `langchain` / `langchain-core` / `langgraph` |
-| Config objects | `dataclasses` (`HarnessAgentConfig` / `ProviderConfig` / `ModelConfig`) with `to_dict` / `from_dict` |
-| Optional extras | `cli` (click + rich + prompt-toolkit), `bedrock`, `remote-backends`, `docker`, `opensandbox`, `observability` (langfuse), `acp`, `desktop` (mss + pynput + pillow), `web-search-all`, `object-storage`, `all` |
-| Ecosystem | `octop-memory`, `octop-browser`, `langchain-mcp-adapters` + `mcp` |
-| Packaging | hatchling; local development with `uv` (`uv sync --group dev`) |
-| Quality gates | ruff (lint + format, line length 120), `mypy --strict`, pytest + pytest-asyncio |
+| 语言 | Python 3.12+;每个源文件都有 `from __future__ import annotations` |
+| Agent 运行时 | `deepagents>=0.7,<0.8` + `langchain` / `langchain-core` / `langgraph` |
+| 配置对象 | `dataclasses`(`HarnessAgentConfig` / `ProviderConfig` / `ModelConfig`),带 `to_dict` / `from_dict` |
+| 可选 extras | `cli`(click + rich + prompt-toolkit)、`bedrock`、`remote-backends`、`docker`、`opensandbox`、`observability`(langfuse)、`acp`、`desktop`(mss + pynput + pillow)、`web-search-all`、`object-storage`、`all` |
+| 生态 | `octop-memory`、`octop-browser`、`langchain-mcp-adapters` + `mcp` |
+| 打包 | hatchling;本地开发用 `uv`(`uv sync --group dev`) |
+| 质量门禁 | ruff(lint + format,行宽 120)、`mypy --strict`、pytest + pytest-asyncio |
 
-## 4. Package layout
+## 4. 包结构
 
 ```
 src/octop_harness/
-├── __init__.py             # Public exports + type stubs + lazy load of HarnessAgent / Workspace
-├── _version.py             # Resolve [project].version from pyproject.toml via importlib.metadata
-├── agent.py                # HarnessAgent (construct + invoke/stream + init())
-├── manager.py              # HarnessAgentManager + multi-agent orchestration + team subsystem
-├── registry.py             # In-memory agent registry (AgentEntry + storage CRUD)
-├── request.py              # ChatRequest (messages/thread_id/user/source/...)
-├── config/                 # HarnessAgentConfig + ProviderConfig + ModelConfig + env parsing
-├── init.py                 # init_workspace + InitResult (workspace seeding)
-├── backends/               # Backend string / dict → BackendProtocol instance
-│   ├── workspace.py        # BackendWorkspace: L1 agent-storage facade
-│   └── utils.py            # Path rules + backend I/O helpers + materialize_storage_path
-├── llm/                    # ChatModelFactory (ProviderConfig → BaseChatModel) + model routing
-├── middleware/             # SessionLogger / PII / memory / media offload, etc.
-├── memory/                 # MemoryRuntime (octop-memory adapter)
-├── media/                  # Vendor-agnostic media generation (BaseMediaProvider + builtins)
-├── plugins/                # Plugin system (manifest / loader / registry / tools / context)
-├── providers/              # provider_template.json (presets) + load_provider_templates()
-├── protocols/              # Chat protocol registry (discover / resolve implementations)
-├── security/               # Policy models (FilesystemPolicy / HitlPolicy / SSRF) + tool_guard
-├── skills/                 # Skill catalog and metadata helpers
-├── slash/                  # Runtime slash commands (stop / skills / model)
-├── subagents/              # Workspace subagent loading and catalog
-├── teams/                  # Optional inbox-driven agent-to-agent collaboration
-├── acp/                    # ACP (Agent Client Protocol) external-agent integration
-├── observability/          # Optional observability (langfuse) + runtime logging
-├── context_usage.py        # Context-window usage estimate / persistence
-├── compaction.py           # Forced session compaction (SummarizationMiddleware offload + summary)
-├── messages.py / usage.py  # Message parsing / token-usage normalization
-├── runtime_env.py          # Process env + global keys + workspace .env merge
-├── mcp.py                  # MCP server config merge + tool loading
-├── cli/                    # Optional CLI (main / commands / agents / config / providers / repl / ui)
+├── __init__.py             # 公共导出 + 类型 stub + HarnessAgent / Workspace 的懒加载
+├── _version.py             # 经 importlib.metadata 解析 pyproject.toml 的 [project].version
+├── agent.py                # HarnessAgent(构造 + invoke/stream + init())
+├── manager.py              # HarnessAgentManager + 多 agent 编排 + team 子系统
+├── registry.py             # 内存 agent 注册表(AgentEntry + 存储 CRUD)
+├── request.py              # ChatRequest(messages/thread_id/user/source/...)
+├── config/                 # HarnessAgentConfig + ProviderConfig + ModelConfig + env 解析
+├── init.py                 # init_workspace + InitResult(工作区种子)
+├── backends/               # Backend 字符串 / dict → BackendProtocol 实例
+│   ├── workspace.py        # BackendWorkspace:L1 agent 存储门面
+│   └── utils.py            # 路径规则 + backend I/O 辅助 + materialize_storage_path
+├── llm/                    # ChatModelFactory(ProviderConfig → BaseChatModel)+ 模型路由
+├── middleware/             # SessionLogger / PII / memory / 媒体卸载等
+├── memory/                 # MemoryRuntime(octop-memory 适配器)
+├── media/                  # 供应商无关的媒体生成(BaseMediaProvider + 内置实现)
+├── plugins/                # 插件系统(manifest / loader / registry / tools / context)
+├── providers/              # provider_template.json(预设)+ load_provider_templates()
+├── protocols/              # 聊天协议注册表(发现 / 解析实现)
+├── security/               # 策略模型(FilesystemPolicy / HitlPolicy / SSRF)+ tool_guard
+├── skills/                 # Skill 目录与元数据辅助
+├── slash/                  # 运行时斜杠命令(stop / skills / model)
+├── subagents/              # 工作区子 agent 加载与目录
+├── teams/                  # 可选的收件箱驱动的 agent 间协作
+├── acp/                    # ACP(Agent Client Protocol)外部 agent 集成
+├── observability/          # 可选可观测(langfuse)+ 运行时日志
+├── context_usage.py        # 上下文窗口用量估算 / 持久化
+├── compaction.py           # 强制会话压缩(SummarizationMiddleware 卸载 + 摘要)
+├── messages.py / usage.py  # 消息解析 / token 用量归一化
+├── runtime_env.py          # 进程 env + 全局键 + 工作区 .env 合并
+├── mcp.py                  # MCP server 配置合并 + 工具加载
+├── cli/                    # 可选 CLI(main / commands / agents / config / providers / repl / ui)
 └── builtin/
-    ├── _sync.py            # Sync builtin/skills/* into workspace/_builtin_skills/
-    ├── templates.py        # Pure read layer for packaged builtin/ resources
-    ├── md_files/           # User workspace templates (en/ zh/)
-    ├── agents/             # Built-in workspace subagent defs (en/ zh/, YAML frontmatter + system_prompt)
-    ├── skills/             # Built-in skills (en/ zh/, synced at startup)
-    └── tools/              # Built-in tools (current_time / web_fetch / send_file / screenshot / web_search/*)
+    ├── _sync.py            # 把 builtin/skills/* 同步到 workspace/_builtin_skills/
+    ├── templates.py        # 打包 builtin/ 资源的纯读取层
+    ├── md_files/           # 用户工作区模板(en/ zh/)
+    ├── agents/             # 内置工作区子 agent 定义(en/ zh/,YAML frontmatter + system_prompt)
+    ├── skills/             # 内置 skills(en/ zh/,启动时同步)
+    └── tools/              # 内置工具(current_time / web_fetch / send_file / screenshot / web_search/*)
 
-tests/                      # pytest, one-to-one with src modules
-examples/                   # End-to-end runnable demos (numbered)
-multi_agent_demo/           # Multi-agent example configs
+tests/                      # pytest,与 src 模块一一对应
+examples/                   # 端到端可运行示例(带编号)
+learning/                   # 源码学习课程(16 本中文 notebook;不进质量门禁与发布产物)
+multi_agent_demo/           # 多 agent 示例配置
 ```
 
-**Change-mapping cheat sheet:**
+**改动定位速查:**
 
-| To change… | Look at… |
+| 要改… | 看… |
 |------------|----------|
-| Public API (constructor / fields) | `agent.py` / `config/` / `request.py` |
-| Multi-agent register / route / cancel | `manager.py` / `registry.py` |
-| New built-in tool | `builtin/tools/*.py` + `builtin/tools/__init__.py` |
-| New built-in skill | `builtin/skills/{en,zh}/<name>/SKILL.md` |
-| New backend | `backends/__init__.py` (register) + `backends/<name>.py` (implement) |
-| Paths / backend storage | `backends/utils.py` / `backends/workspace.py` |
-| Config serialization | `config/` |
-| Startup behavior | `HarnessAgent.__init__` assembly in `agent.py` |
-| Provider preset list | `providers/provider_template.json` |
-| CLI subcommands | `cli/commands/*_cmd.py` + `cli/main.py` |
+| 公共 API(构造函数 / 字段) | `agent.py` / `config/` / `request.py` |
+| 多 agent 注册 / 路由 / 取消 | `manager.py` / `registry.py` |
+| 新内置工具 | `builtin/tools/*.py` + `builtin/tools/__init__.py` |
+| 新内置 skill | `builtin/skills/{en,zh}/<name>/SKILL.md` |
+| 新 backend | `backends/__init__.py`(注册)+ `backends/<name>.py`(实现) |
+| 路径 / backend 存储 | `backends/utils.py` / `backends/workspace.py` |
+| 配置序列化 | `config/` |
+| 启动行为 | `agent.py` 中 `HarnessAgent.__init__` 的组装 |
+| Provider 预设列表 | `providers/provider_template.json` |
+| CLI 子命令 | `cli/commands/*_cmd.py` + `cli/main.py` |
 
-## 5. Module boundaries
+## 5. 模块边界
 
-### Layers (bottom-up; reverse imports are forbidden)
+### 分层(自底向上;禁止反向 import)
 
-| Layer | Module | Owns |
+| 层 | 模块 | 职责 |
 |-------|--------|------|
-| L0 | `backends/utils.py` | Low-level I/O helpers (`backend_write_force`, etc.); `materialize_storage_path` escape hatch |
-| L1 | `backends/workspace.py` (`BackendWorkspace`) | The **only** I/O facade for **agent-visible / agent-used workspace content** inside harness |
-| L2 | `middleware/*`, `builtin/tools/*`, `init.py`, `builtin/_sync.py` | Business / seed logic; L1 content goes only through `BackendWorkspace`; runtime persistence may hit local FS / DB as an explicit exception |
-| L3 | `agent.py` | Assembly; `config` parses path fragments and does not do I/O itself |
+| L0 | `backends/utils.py` | 低层 I/O 辅助(`backend_write_force` 等);`materialize_storage_path` 逃生口 |
+| L1 | `backends/workspace.py`(`BackendWorkspace`) | harness 内**agent 可见 / agent 使用的工作区内容**的**唯一** I/O 门面 |
+| L2 | `middleware/*`、`builtin/tools/*`、`init.py`、`builtin/_sync.py` | 业务 / 种子逻辑;L1 内容只经 `BackendWorkspace`;运行时持久化可作为显式例外直接落本地 FS / DB |
+| L3 | `agent.py` | 组装;`config` 只解析路径片段,自身不做 I/O |
 
-### Which path to use
+### 该走哪条路径
 
-| Caller | Entry | Notes |
+| 调用方 | 入口 | 说明 |
 |--------|-------|-------|
-| Internal L1 content (init, bootstrap, skills, media, bound send_file, catalogs, …) | `agent.workspace` / `BackendWorkspace` | **Required** |
-| LLM tools (`read_file` / `write_file`) | `agent.backend` | deepagents protocol; interpreted by the backend's `virtual_mode` / `root_dir` |
-| Local runtime persistence (memory DB, `sessions/` JSONL, `checkpoints.sqlite`) | `Path` / `open()` / DB drivers, default under `workspace_dir` | Explicit exception: real OS fds, locks, append, or rotation — not via `BackendWorkspace` |
-| Runtime diagnostic logs (`octop_harness.*`) | `Path` / logging handlers, default `~/.octop-harness/logs` | App-level `HarnessAgentManager(log_dir=…)` / `setup_logging`; shared across agents with `[agent=…]` |
-| CLI global config (`~/.octop-harness/`) | Local FS | Not part of the agent workspace |
+| 内部 L1 内容(init、bootstrap、skills、媒体、绑定的 send_file、目录清单,…) | `agent.workspace` / `BackendWorkspace` | **必须** |
+| LLM 工具(`read_file` / `write_file`) | `agent.backend` | deepagents 协议;由 backend 的 `virtual_mode` / `root_dir` 解释 |
+| 本地运行时持久化(memory DB、`sessions/` JSONL、`checkpoints.sqlite`) | `Path` / `open()` / DB 驱动,默认在 `workspace_dir` 下 | 显式例外:真实 OS fd、锁、append 或轮转——不经 `BackendWorkspace` |
+| 运行时诊断日志(`octop_harness.*`) | `Path` / logging handler,默认 `~/.octop-harness/logs` | 应用层 `HarnessAgentManager(log_dir=…)` / `setup_logging`;多 agent 共享,带 `[agent=…]` 前缀 |
+| CLI 全局配置(`~/.octop-harness/`) | 本地 FS | 不属于 agent 工作区 |
 
-"Agent content" here means templates, bootstrap, skills, media, send-file materialize targets, and other workspace content used by the agent / LLM. Those reads and writes go through `BackendWorkspace` only — never direct `Path` / `open()`. Do not bypass `BackendWorkspace` for L1 content with `Path(workspace_dir).read_text()` / `open()`. This ban does **not** extend to the local runtime-persistence rows in the table above.
+这里说的"agent 内容"指模板、bootstrap、skills、媒体、send-file 落盘目标,以及其他被 agent / LLM 使用的工作区内容。它们的读写只经 `BackendWorkspace`——绝不用 `Path` / `open()` 直接操作。不要用 `Path(workspace_dir).read_text()` / `open()` 绕过 `BackendWorkspace` 访问 L1 内容。但这条禁令**不**延伸到上表中本地运行时持久化的条目。
 
-## 6. Run commands
+## 6. 常用命令
 
 ```bash
-# Full gate (required before commit; also what the pre-commit hook runs)
+# 完整门禁(提交前必须通过;也是 pre-commit 钩子运行的内容)
 make all                    # = format + lint + typecheck + test
 
-# Individual targets
-make format                 # ruff check --fix + ruff format (rewrites files)
+# 单独的目标
+make format                 # ruff check --fix + ruff format(会改写文件)
 make lint                   # ruff check + ruff format --check
 make typecheck              # mypy --strict
-make test                   # pytest (with coverage)
+make test                   # pytest(带覆盖率)
 
-# Direct venv (when make is inconvenient)
+# 直接用 venv(make 不方便时)
 .venv/bin/python -m ruff check . && .venv/bin/python -m ruff format --check .
 .venv/bin/python -m mypy --strict src
 .venv/bin/python -m pytest -q
 
-# Environment
-make install-hooks          # once per clone: enable .githooks pre-commit
-make install                # uv sync --group dev (alias: make install-dev)
-uv sync --all-extras        # all optional extras (same as pip install 'octop-harness[cli,all]')
+# 环境
+make install-hooks          # 每个 clone 一次:启用 .githooks pre-commit
+make install                # uv sync --group dev(别名:make install-dev)
+uv sync --all-extras        # 全部可选 extras(等同 pip install 'octop-harness[cli,all]')
 
-# Packaging
-make build                  # wheel + sdist into dist/
-make version                # print current version
+# 打包
+make build                  # wheel + sdist 输出到 dist/
+make version                # 打印当前版本
 
-# Run an example
+# 跑一个示例
 .venv/bin/python examples/06_init_and_md_files.py
 ```
 
-**Single-test debug:** `pytest tests/test_init.py::TestInitWorkspace::test_idempotent_second_call_skips -xvs`
+**单测调试:** `pytest tests/test_init.py::TestInitWorkspace::test_idempotent_second_call_skips -xvs`
 
-**Git hooks (required for local commits):** after cloning, run **`make install-hooks`** once. That sets `core.hooksPath=.githooks`, so every `git commit` first runs **`make all`** (`format` rewrites files, then lint / typecheck / test). Staged files rewritten by format are re-added automatically, so the commit contains the formatted content. Bypass only in emergencies: `SKIP_PRECOMMIT=1 git commit …` or `git commit --no-verify` — **do not** skip the hook to land a red suite.
+**Git 钩子(本地提交必须):** clone 后先执行一次 **`make install-hooks`**。它会设置 `core.hooksPath=.githooks`,此后每次 `git commit` 都会先跑 **`make all`**(`format` 会改写文件,然后 lint / typecheck / test)。被 format 改写的暂存文件会自动重新 add,提交内容是格式化后的。仅在紧急情况绕过:`SKIP_PRECOMMIT=1 git commit …` 或 `git commit --no-verify`——**不要**为了提交一套红灯的代码而跳过钩子。
 
-## 7. Key conventions
+## 7. 关键约定
 
-### Library vs application
+### 库 vs 应用
 
-- **May add:** thin wrappers on deepagents, public APIs, optional backends / tools / skills, serialization.
-- **Must not add:** HTTP server, local database, cron daemon, vector-memory persistence, UI, login / user management. Those are application concerns.
+- **可以加:** deepagents 的薄封装、公共 API、可选 backend / 工具 / skill、序列化。
+- **不得加:** HTTP 服务器、本地数据库、cron 守护进程、向量记忆持久化、UI、登录 / 用户管理。这些是应用层关注点。
 
-### Default-value philosophy
+### 默认值哲学
 
-- **Zero-deps first:** core `pip install octop-harness` ships no optional packages; heavy deps (`mss`, `langchain-tavily`, …) go through `[extras]`.
-- **Fail-soft for UX, not for checks:** fail-soft applies to startup / call-time user experience, not mypy / lint. Missing backend extras should error clearly and tell the user what to install; tests and type checks stay strict.
-- **User edits are sacred:** `init()` does not overwrite existing files by default; `overwrite=True` force-refreshes. Wipe-and-replace of `builtin/skills` runs only when the version stamp differs.
+- **零依赖优先:** 核心 `pip install octop-harness` 不携带可选依赖;重型依赖(`mss`、`langchain-tavily`,…)走 `[extras]`。
+- **体验可 fail-soft,检查不 fail-soft:** fail-soft 只适用于启动 / 调用时的用户体验,不适用于 mypy / lint。缺失的 backend extras 要报清晰的错误并告诉用户该装什么;测试和类型检查保持严格。
+- **用户编辑是神圣的:** `init()` 默认不覆盖已有文件;`overwrite=True` 强制刷新。`builtin/skills` 的擦除替换只在版本戳不同时发生。
 
-### Naming
+### 命名
 
-- Tool functions / modules / files / packages: `snake_case`; no hyphens.
-- Skill directories: `kebab-case` (`skill-creator/`, `web-search/`) — de facto Anthropic-ecosystem standard; enumerate with `importlib.resources.files(...).iterdir()` (`Traversable` does not require a valid Python package name).
-- Classes: `PascalCase` (`HarnessAgent`, `InitResult`).
+- 工具函数 / 模块 / 文件 / 包:`snake_case`;不用连字符。
+- Skill 目录:`kebab-case`(`skill-creator/`、`web-search/`)——Anthropic 生态的事实标准;用 `importlib.resources.files(...).iterdir()` 枚举(`Traversable` 不要求合法 Python 包名)。
+- 类:`PascalCase`(`HarnessAgent`、`InitResult`)。
 
-### Agent workspace and `BackendWorkspace`
+### Agent 工作区与 `BackendWorkspace`
 
-#### `root_dir` vs `workspace_dir` (different axes; do not conflate)
+#### `root_dir` vs `workspace_dir`(不同维度;不要混为一谈)
 
 | | `root_dir` | `workspace_dir` |
 |---|---|---|
-| **What it is** | Mount argument when building a local backend (`filesystem` / `local_shell`) | The agent's **recommended working directory** (host absolute path, or an agent-facing rootfs path) |
-| **Who uses it** | Only `resolve_backend` / deepagents backend construction | `HarnessAgentConfig`, harness assembly, `BackendWorkspace` |
-| **Visible to agent / LLM?** | **No** — not a tool-API concept | Workspace semantics; relative paths are relative to it |
-| **Typical role** | Where virtual `/` maps on disk | Default base for SOUL/skills/seed files and some runtime persistence |
+| **是什么** | 构建本地 backend(`filesystem` / `local_shell`)时的挂载参数 | Agent 的**推荐工作目录**(宿主机绝对路径,或 agent 视角的 rootfs 路径) |
+| **谁在用** | 仅 `resolve_backend` / deepagents backend 构建 | `HarnessAgentConfig`、harness 组装、`BackendWorkspace` |
+| **对 agent / LLM 可见?** | **否**——不是工具 API 概念 | 工作区语义;相对路径以它为基准 |
+| **典型角色** | 虚拟 `/` 在磁盘上的落点 | SOUL/skills/种子文件及部分运行时持久化的默认基底 |
 
-**Do not** treat them as "two peer trees" or as "the agent choosing between root and workspace". The agent only sees path conventions; `root_dir` is a backend-assembly detail.
+**不要**把它们当成"两棵对等的树"或"agent 在 root 和 workspace 之间做选择"。Agent 只看到路径约定;`root_dir` 是 backend 组装细节。
 
-Factory behavior, briefly:
+工厂行为,简述:
 
-- If the spec does **not** pin `root_dir`, fill it from `workspace_dir` → virtual `/` aligns with the workspace (common, recommended).
-- The default spec pins `root_dir="/"` + `virtual_mode=True` → the backend sees the whole machine; `workspace_dir` remains the recommended workspace (and at host-root the factory wraps a composite so deepagents offload lands in the workspace).
-- `workspace_dir` may be a host absolute path or an agent-facing rootfs path (e.g. `/.octop/workspaces/<id>`). The latter is mapped by harness onto `{root_dir}/…` before local persistence, and is valid on Windows too (no drive letter). With aligned config, workspace content corresponds to virtual-FS paths from `/` (e.g. `/SOUL.md` → `{workspace_dir}/SOUL.md`).
+- 若 spec **未**固定 `root_dir`,则用 `workspace_dir` 填充 → 虚拟 `/` 与工作区对齐(常见,推荐)。
+- 默认 spec 固定 `root_dir="/"` + `virtual_mode=True` → backend 看到整台机器;`workspace_dir` 仍是推荐工作区(且在宿主根目录时工厂会包一层 composite,让 deepagents 的卸载落到工作区)。
+- `workspace_dir` 可以是宿主机绝对路径,也可以是 agent 视角的 rootfs 路径(如 `/.octop/workspaces/<id>`)。后者由 harness 先映射到 `{root_dir}/…` 再做本地持久化,在 Windows 上也合法(无盘符)。对齐配置下,工作区内容与从 `/` 出发的虚拟 FS 路径一一对应(如 `/SOUL.md` → `{workspace_dir}/SOUL.md`)。
 
-#### `virtual_mode=True` (default) and `root_dir` is not host `/`
+#### `virtual_mode=True`(默认)且 `root_dir` 不是宿主 `/`
 
-deepagents filesystem tools then map `/foo` to `{root_dir}/foo` (implementation detail; the agent entry is still a rootfs path, and harness does **not** concatenate `root_dir` at the tool entry).
+deepagents 文件系统工具此时把 `/foo` 映射到 `{root_dir}/foo`(实现细节;agent 入口仍是 rootfs 路径,harness 在工具入口**不**拼接 `root_dir`)。
 
-**`BubbledLocalShellBackend` (Linux + bwrap + non-host `root_dir` + `virtual_mode` only)**
+**`BubbledLocalShellBackend`(仅 Linux + bwrap + 非宿主 `root_dir` + `virtual_mode`)**
 
-- The factory picks this only when those conditions hold; otherwise `HarnessLocalShellBackend` (dotenv refresh, conservative trusted-virtual-path mapping).
-- Directory jail applies only to `execute`: bind `root_dir` to `/` inside the jail.
-- In-workspace path limits are owned by deepagents / the jail; command strings stay agent-facing and are not rewritten.
-- Jail cwd aligns to the virtual `workspace_dir` (falls back to `/` if the workspace is not under `root_dir`).
+- 只有这些条件同时满足工厂才选它;否则选 `HarnessLocalShellBackend`(dotenv 刷新、保守的可信虚拟路径映射)。
+- 目录监禁只作用于 `execute`:把 `root_dir` 绑定为监禁内的 `/`。
+- 工作区内的路径限制由 deepagents / 监禁负责;命令串保持 agent 视角,不做改写。
+- 监禁 cwd 对齐虚拟 `workspace_dir`(工作区不在 `root_dir` 下时回退到 `/`)。
 
-**No jail (macOS / no bwrap / host root)**
+**无监禁(macOS / 无 bwrap / 宿主根)**
 
-- `execute` runs with the host workspace as cwd.
-- When not host-root and `virtual_mode=True`, trusted virtual absolute paths in command tokens and env map to `{root_dir}/…`: existing host paths win; otherwise only workspace-internal paths or paths with an existing virtual-tree ancestor. URLs, real `/usr` / `/tmp`, and host absolute paths stay unchanged.
-- `root_dir` prefixes in execute output are restored to agent-facing `/…`.
-- Reading artifacts uses **multi-layer failback** on the `BackendWorkspace` read side:
-  - **Absolute paths:** try the `{root_dir}` mapping (`backend._resolve_path`) first; if missing, the original host path.
-  - **Relative paths:** try `{root_dir}/{rel}`, then `{workspace_dir}/{rel}`.
-- Bound `materialize_local` / `exists` / `aexists` / `read_text` / `aread_text` / `download_bytes` / `send_file` all use this failback.
+- `execute` 以宿主工作区为 cwd 运行。
+- 非宿主根且 `virtual_mode=True` 时,命令 token 与 env 中的可信虚拟绝对路径映射到 `{root_dir}/…`:已存在的宿主路径优先;否则只允许工作区内部路径、或拥有现存虚拟树祖先的路径。URL、真实的 `/usr` / `/tmp`、宿主绝对路径保持不变。
+- execute 输出中的 `root_dir` 前缀还原为 agent 视角的 `/…`。
+- 读取产物时在 `BackendWorkspace` 读侧做**多层回退**:
+  - **绝对路径:** 先试 `{root_dir}` 映射(`backend._resolve_path`);缺失再试原始宿主路径。
+  - **相对路径:** 先试 `{root_dir}/{rel}`,再试 `{workspace_dir}/{rel}`。
+- 绑定的 `materialize_local` / `exists` / `aexists` / `read_text` / `aread_text` / `download_bytes` / `send_file` 都走这套回退。
 
 ```text
 model: write_file("/gen/run.py") + execute("python /gen/run.py")
         │                              │
         ▼                              ▼
-  deepagents → {root}/gen/run.py    bwrap: /gen/... inside the jail
-                                    no jail: trusted virtual paths map to {root}/gen/...
-model/harness then read artifacts:
+  deepagents → {root}/gen/run.py    bwrap: 监禁内的 /gen/...
+                                    无监禁: 可信虚拟路径映射到 {root}/gen/...
+model / harness 随后读取产物:
   BackendWorkspace.materialize_local("/gen/out.pptx")
-    → {root}/gen/out.pptx first, then original /gen/out.pptx
-      (and relative paths: root → workspace)
+    → 先 {root}/gen/out.pptx,再原始 /gen/out.pptx
+      (相对路径: root → workspace)
 ```
 
-#### `BackendWorkspace.resolve_path` cheat sheet
+#### `BackendWorkspace.resolve_path` 速查
 
-| Input | Result |
+| 输入 | 结果 |
 |-------|--------|
-| Does not start with `/` | `{workspace_dir}/{fragment}` |
-| Starts with `/` | Under `virtual_mode`, mapped via `backend._resolve_path` onto `root_dir`; otherwise left as-is |
-| `~/…` | Host path after `expanduser()` |
+| 不以 `/` 开头 | `{workspace_dir}/{fragment}` |
+| 以 `/` 开头 | `virtual_mode` 下经 `backend._resolve_path` 映射到 `root_dir`;否则原样返回 |
+| `~/…` | `expanduser()` 之后的宿主路径 |
 
-Relative paths that escape `workspace_dir` (e.g. `../x`) → `PermissionError`.
-`skill_paths()` / `memory_paths()` go through `_backend_storage_key` (agent-facing virtual key under `virtual_mode`, **not** concatenated with `root_dir`) for deepagents Skills/Memory middleware `backend.ls` and system-prompt injection; host I/O / materialize still uses `resolve_path`.
+逃逸 `workspace_dir` 的相对路径(如 `../x`)→ `PermissionError`。
+`skill_paths()` / `memory_paths()` 经 `_backend_storage_key`(`virtual_mode` 下是 agent 视角的虚拟 `/…` 键,**不**与 `root_dir` 拼接)交给 deepagents Skills/Memory 中间件做 `backend.ls` 与系统提示注入;宿主 I/O / 物化仍用 `resolve_path`。
 
 ```python
 ws = agent.workspace
@@ -271,119 +272,119 @@ ws.write_text("AGENTS.md", text, force=True)
 agent.init_workspace()
 ```
 
-### Strict lazy imports
+### 严格懒导入
 
-- Optional SDKs (`mss`, `langchain_tavily`, `qcloud_cos`, …) are imported **only at call time**, never at module top level.
-- Exempt `PLC0415` with ruff per-file-ignore; do not use inline `# noqa` (it conflicts with per-file-ignore and triggers `RUF100`).
-- Follow the existing comment pattern in `[tool.ruff.lint.per-file-ignores]` in `pyproject.toml`.
+- 可选 SDK(`mss`、`langchain_tavily`、`qcloud_cos`,…)只在调用时导入,绝不在模块顶层导入。
+- 用 ruff per-file-ignore 豁免 `PLC0415`;不要用内联 `# noqa`(它与 per-file-ignore 冲突并触发 `RUF100`)。
+- 遵循 `pyproject.toml` 中 `[tool.ruff.lint.per-file-ignores]` 已有的注释模式。
 
-## 8. Common pitfalls
+## 8. 常见坑
 
-- **`HarnessAgentConfig` is a frozen dataclass:** adding a field means updating `to_dict` / `from_dict` as well (including `_unserializable_fields` and `_xxx_to_jsonable` helpers). `providers` is now `list[ProviderConfig]`, serialized as a JSON array not an object; `ProviderConfig` has an `id` field that must be passed at construction.
-- **`ProviderConfig` requires `id`:** `id` is the first positional argument (required, no default). Hand-written `ProviderConfig(base_url=..., api_key=...)` must add `id=`; JSON deserialization goes through `from_dict` (old dict format is backward-compatible).
-- **mypy strict does not allow implicit `Any` returns:** third-party SDK calls that return `Any` need an explicit `cast` or `assert isinstance(...)`, or you get `no-any-return`.
-- **mypy for optional packages such as `mss`:** add `ignore_missing_imports = true` under `[[tool.mypy.overrides]]`. Do **not** use `# type: ignore[import-not-found]` (it becomes `unused-ignore` once the extra is installed).
-- **deepagents skills / memory paths:** `skill_paths()` / `memory_paths()` go to deepagents via `_backend_storage_key` (`virtual_mode` → virtual `/…` key; do not concatenate host `root_dir`). `resolve_path` is only for host I/O / materialize (see [§7](#agent-workspace-and-backendworkspace)).
-- **L1 agent storage:** agent-visible / agent-used workspace content goes through `agent.workspace` (`BackendWorkspace`); memory DB, logs, JSONL transcripts, and checkpoint SQLite are local runtime persistence and use local FS / DB drivers directly. Do not treat `root_dir` as a second workspace.
-- **shell / virtual_mode:** non-host-root + `virtual_mode` + Linux + bwrap → factory picks `BubbledLocalShellBackend` to jail `execute`; otherwise `HarnessLocalShellBackend` conservatively maps trusted virtual command/env paths and uses the workspace as cwd. Reads still have `BackendWorkspace` root→original / root→workspace failback (see [§7](#agent-workspace-and-backendworkspace)).
-- **Do not import `mss` at module top level:** import inside the function, or `import octop_harness.builtin.tools` breaks for `pip install octop-harness` without `[desktop]`.
-- **`init.py` must not `from octop_harness import __version__`:** that causes a circular import. Use `from octop_harness._version import __version__` (the single source of the version is `[project].version` in `pyproject.toml`).
-- **`HarnessAgentManager` is the recommended entry:** `manager.create_agent(config)` eagerly builds and caches `HarnessAgent`; `manager.stream(agent_id, request)` reuses the cached instance. Direct `HarnessAgent(config)` is still supported for backend-only work (`agent.backend`, `agent.init_workspace()`), but **all LLM chat goes through the manager**.
-- **`HarnessAgentManager` is a single-process in-memory registry:** do not share one instance across processes; cross-process coordination is left to the MQ extension point (the interface is already reserved).
-- **CLI uses `CliAgentManager`, not the library `HarnessAgentManager` directly:** `cli/agents/manager.py` `CliAgentManager` owns file persistence and reaches the underlying manager via `.runtime`.
-- **Provider presets live in JSON, not Python:** `providers/provider_template.json` is the single source of truth; `cli/providers/registry.py` `_build_registry()` reads that JSON. Do not hard-code new providers in Python.
+- **`HarnessAgentConfig` 是 frozen dataclass:** 加字段必须同时更新 `to_dict` / `from_dict`(包括 `_unserializable_fields` 和 `_xxx_to_jsonable` 辅助)。`providers` 现在是 `list[ProviderConfig]`,序列化为 JSON 数组而非对象;`ProviderConfig` 有 `id` 字段,构造时必须传。
+- **`ProviderConfig` 必须传 `id`:** `id` 是第一个位置参数(必填,无默认值)。手写 `ProviderConfig(base_url=..., api_key=...)` 必须加 `id=`;JSON 反序列化走 `from_dict`(旧 dict 格式向后兼容)。
+- **mypy strict 不允许隐式 `Any` 返回:** 返回 `Any` 的第三方 SDK 调用要显式 `cast` 或 `assert isinstance(...)`,否则报 `no-any-return`。
+- **`mss` 等可选包的 mypy:** 在 `[[tool.mypy.overrides]]` 下加 `ignore_missing_imports = true`。**不要**用 `# type: ignore[import-not-found]`(装上 extra 后会变成 `unused-ignore`)。
+- **deepagents skills / memory 路径:** `skill_paths()` / `memory_paths()` 经 `_backend_storage_key` 交给 deepagents(`virtual_mode` → 虚拟 `/…` 键;不要拼接宿主 `root_dir`)。`resolve_path` 只用于宿主 I/O / 物化(见 [§7](#agent-工作区与-backendworkspace))。
+- **L1 agent 存储:** agent 可见 / agent 使用的工作区内容走 `agent.workspace`(`BackendWorkspace`);memory DB、日志、JSONL 转写、checkpoint SQLite 是本地运行时持久化,直接用本地 FS / DB 驱动。不要把 `root_dir` 当成第二个工作区。
+- **shell / virtual_mode:** 非宿主根 + `virtual_mode` + Linux + bwrap → 工厂选 `BubbledLocalShellBackend` 监禁 `execute`;否则 `HarnessLocalShellBackend` 保守映射可信的命令 / env 虚拟路径并以工作区为 cwd。读取仍有 `BackendWorkspace` 的 root→原始 / root→workspace 回退(见 [§7](#agent-工作区与-backendworkspace))。
+- **不要在模块顶层 import `mss`:** 在函数内导入,否则未装 `[desktop]` 的 `pip install octop-harness` 用户执行 `import octop_harness.builtin.tools` 会挂。
+- **`init.py` 不得 `from octop_harness import __version__`:** 会循环导入。用 `from octop_harness._version import __version__`(版本唯一来源是 `pyproject.toml` 的 `[project].version`)。
+- **`HarnessAgentManager` 是推荐入口:** `manager.create_agent(config)` 立即构建并缓存 `HarnessAgent`;`manager.stream(agent_id, request)` 复用缓存实例。直接 `HarnessAgent(config)` 仍支持纯 backend 用途(`agent.backend`、`agent.init_workspace()`),但**所有 LLM 对话都走 manager**。
+- **`HarnessAgentManager` 是单进程内存注册表:** 不要跨进程共享同一实例;跨进程协调留给 MQ 扩展点(接口已预留)。
+- **CLI 用 `CliAgentManager`,不直接用库的 `HarnessAgentManager`:** `cli/agents/manager.py` 的 `CliAgentManager` 负责文件持久化,经 `.runtime` 触达底层 manager。
+- **Provider 预设放 JSON,不放 Python:** `providers/provider_template.json` 是唯一事实来源;`cli/providers/registry.py` 的 `_build_registry()` 读该 JSON。不要在 Python 里硬编码新 provider。
 
-## 9. Test conventions
+## 9. 测试约定
 
-- **Test files mirror `src/` modules:** `src/octop_harness/init.py` ↔ `tests/test_init.py`; subpackages have matching directories (`tests/cli/`, `tests/config/`, `tests/protocols/`, `tests/slash/`, `tests/observability/`).
-- **Mock third-party SDKs; no network:** all web-search / S3 / COS tests use mock clients; only `examples/` may use a real network.
-- **Assert behavior, not implementation:** `test_idempotent_second_call_skips` checks the `templates_skipped` list, not internal branches in `_sync.py`.
-- **Regex matches use raw strings:** `pytest.raises(RuntimeError, match=r"env var.*missing")`, otherwise `RUF043`.
-- **Cross-platform:** CI runs on Linux, but code must land on Windows / macOS. Guard POSIX-only behavior (bwrap, `chmod`, `/proc`) with `pytest.mark.skipif`; prefer `tmp_path` / `pathlib.Path` equality over hardcoded `/`-prefix strings. See `tests/test_bwrap_shell*.py` and `tests/test_docker_sandbox.py`.
-- **Before a PR:** full suite green, mypy 0 issues, ruff clean — CI runs the same.
+- **测试文件与 `src/` 模块一一对应:** `src/octop_harness/init.py` ↔ `tests/test_init.py`;子包有对应目录(`tests/cli/`、`tests/config/`、`tests/protocols/`、`tests/slash/`、`tests/observability/`)。
+- **Mock 第三方 SDK;不走网络:** 所有 web-search / S3 / COS 测试用 mock 客户端;只有 `examples/` 可以用真实网络。
+- **断言行为而非实现:** `test_idempotent_second_call_skips` 检查 `templates_skipped` 列表,而不是 `_sync.py` 的内部分支。
+- **正则匹配用原始字符串:** `pytest.raises(RuntimeError, match=r"env var.*missing")`,否则 `RUF043`。
+- **跨平台:** CI 跑 Linux,但代码必须兼容 Windows / macOS。POSIX 专属行为(bwrap、`chmod`、`/proc`)用 `pytest.mark.skipif` 守卫;优先 `tmp_path` / `pathlib.Path` 相等断言,避免硬编码 `/` 前缀字符串。参见 `tests/test_bwrap_shell*.py`、`tests/test_docker_sandbox.py`。
+- **PR 前:** 全套件绿、mypy 0 问题、ruff 干净——CI 跑同样的内容。
 
-## 10. Do not
+## 10. 禁止事项
 
-Boundary rules are in [§5](#5-module-boundaries). Additionally:
+边界规则见 [§5](#5-模块边界)。此外:
 
-- Do not bypass `BackendWorkspace` with `Path` / `open()` for L1 agent content (local runtime-persistence exceptions: [§5 Which path to use](#which-path-to-use)).
-- Do not import optional SDKs at module top level; do not use inline `# noqa: PLC0415`.
-- Do not add application-layer features: HTTP server, cron daemon, UI, login / user management, vector-memory persistence.
-- Do not commit real credentials: `.env` / `.gitignore` already cover this; `pyproject.toml` must not contain API keys either.
-- Do not hard-code real credentials in README / docstrings / tests: use `"sk-xxx"` placeholders. If a user pastes a secret, do not echo the full string into a commit message / log, and tell them to revoke it.
-- Do not disable PII Middleware for a demo unless the demo's point is turning PII off.
-- Do not duplicate manager / config domain logic in `cli/*_cmd.py`.
-- Do not `git commit` / `git push` unless the user explicitly asks.
+- 不要用 `Path` / `open()` 绕过 `BackendWorkspace` 访问 L1 agent 内容(本地运行时持久化的例外见 [§5 该走哪条路径](#该走哪条路径))。
+- 不要在模块顶层导入可选 SDK;不要用内联 `# noqa: PLC0415`。
+- 不要加应用层功能:HTTP 服务器、cron 守护进程、UI、登录 / 用户管理、向量记忆持久化。
+- 不要提交真实凭据:`.env` / `.gitignore` 已覆盖;`pyproject.toml` 里也不得有 API key。
+- 不要在 README / docstring / 测试里硬编码真实凭据:用 `"sk-xxx"` 占位符。若用户粘贴了密钥,不要把完整字符串回显进提交信息 / 日志,并提醒用户吊销。
+- 不要为演示禁用 PII Middleware,除非演示的主题就是关闭 PII。
+- 不要在 `cli/*_cmd.py` 里复制 manager / config 的领域逻辑。
+- 用户没有明确要求时不要 `git commit` / `git push`。
 
-## 11. Where to look
+## 11. 去哪找
 
-| Question | Location |
+| 问题 | 位置 |
 |----------|----------|
-| How do I construct / call an agent? | `agent.py`, `manager.py`, `tests/test_agent.py` |
-| Multi-agent register and routing | `manager.py`, `registry.py` |
-| Workspace init (seed files / skills) | `init.py`, `builtin/templates.py`, `builtin/_sync.py` |
-| Backend resolution and path rules | `backends/__init__.py`, `backends/utils.py`, `backends/workspace.py` |
-| Shell / sandbox behavior | local shell backend implementations, `tests/test_bwrap_shell*.py`, `tests/test_docker_sandbox.py` |
-| Provider presets / model factory | `providers/provider_template.json`, `llm/` |
-| Middleware (PII / memory / media offload) | `middleware/` |
-| Built-in tools | `builtin/tools/` |
-| Plugin system | `plugins/` |
-| teams / subagents / ACP | `teams/`, `subagents/`, `acp/` |
-| Config fields and env parsing | `config/` |
-| CLI behavior | `cli/main.py`, `cli/commands/*_cmd.py` |
-| Release flow and hooks | [§12](#12-change-workflow); `CONTRIBUTING.md` |
+| 如何构造 / 调用 agent? | `agent.py`、`manager.py`、`tests/test_agent.py` |
+| 多 agent 注册与路由 | `manager.py`、`registry.py` |
+| 工作区初始化(种子文件 / skills) | `init.py`、`builtin/templates.py`、`builtin/_sync.py` |
+| backend 解析与路径规则 | `backends/__init__.py`、`backends/utils.py`、`backends/workspace.py` |
+| shell / 沙箱行为 | 本地 shell backend 实现、`tests/test_bwrap_shell*.py`、`tests/test_docker_sandbox.py` |
+| Provider 预设 / 模型工厂 | `providers/provider_template.json`、`llm/` |
+| 中间件(PII / memory / 媒体卸载) | `middleware/` |
+| 内置工具 | `builtin/tools/` |
+| 插件系统 | `plugins/` |
+| teams / subagents / ACP | `teams/`、`subagents/`、`acp/` |
+| 配置字段与 env 解析 | `config/` |
+| CLI 行为 | `cli/main.py`、`cli/commands/*_cmd.py` |
+| 发布流程与钩子 | [§12](#12-变更流程);`CONTRIBUTING.md` |
 
-External references:
+外部参考:
 
-- [LangChain Deep Agents docs](https://docs.langchain.com/oss/python/deepagents/)
-- [LangGraph middleware guide](https://docs.langchain.com/oss/python/langchain/middleware)
+- [LangChain Deep Agents 文档](https://docs.langchain.com/oss/python/deepagents/)
+- [LangGraph 中间件指南](https://docs.langchain.com/oss/python/langchain/middleware)
 
-## 12. Change workflow
+## 12. 变更流程
 
-1. **Read first:** docstring of the file you will change, neighboring implementations, related specs.
-2. **Hooks:** if this clone has not run `make install-hooks` yet, do it first (see [§6](#6-run-commands)). The hook must stay green before commits.
-3. **Small steps:** split into multiple commits when you can; one commit, one motive.
-4. **Keep docstring and tests in sync:** if a signature / behavior changes, update docstring + tests together.
-5. **New public APIs must:** be in `__all__` of `__init__.py`, have a docstring, be covered by tests, and be mentioned at least once in the README.
-6. **Quality gate:** `make all` must be green — that is also what pre-commit runs; do not commit if the hook fails. If a rule truly needs an exemption, add a per-file-ignore and comment **why**.
-7. **CHANGELOG:** user-visible public behavior gets a line under `## [Unreleased]` in `CHANGELOG.md`.
-8. **Wrap up:** remove orphan symbols this change introduced; do not commit or push unless asked.
+1. **先读:** 要改动文件的 docstring、相邻实现、相关规格。
+2. **钩子:** 若本 clone 还没跑过 `make install-hooks`,先跑(见 [§6](#6-常用命令))。提交前钩子必须保持绿。
+3. **小步前进:** 能拆多个提交就拆;一个提交,一个动机。
+4. **docstring 与测试同步:** 签名 / 行为变了,docstring + 测试一起更新。
+5. **新公共 API 必须:** 进 `__init__.py` 的 `__all__`、有 docstring、有测试覆盖、README 至少提及一次。
+6. **质量门禁:** `make all` 必须全绿——pre-commit 跑的就是它;钩子失败就不要提交。某条规则确实需要豁免时,加 per-file-ignore 并注释**原因**。
+7. **CHANGELOG:** 用户可见的公共行为变化在 `CHANGELOG.md` 的 `## [Unreleased]` 下加一行。
+8. **收尾:** 清理本次改动引入的孤儿符号;未被要求就不要 commit 或 push。
 
-### Branching & release
+### 分支与发布
 
 ```
 feature/* ──PR──► develop ──► release/x.y.z ──PR──► main ──tag v*──► publish
-hotfix/* ──PR──► main (+ tag) and ──PR──► develop
+hotfix/* ──PR──► main(+ tag)并 ──PR──► develop
 ```
 
-| Branch | Role |
+| 分支 | 角色 |
 |--------|------|
-| `main` | Production source of truth; **default branch**; only release / hotfix merges; **only `v*` tags on `main` are production** |
-| `develop` | Daily integration; **base for feature PRs** |
-| `release/x.y.z` | Temporary freeze (version bump / CHANGELOG / README sync); **delete after ship** |
-| `hotfix/*` | Emergency fix from `main`; merge to `main` and back to `develop` |
+| `main` | 生产事实来源;**默认分支**;只接受 release / hotfix 合并;**只有 `main` 上的 `v*` 标签是生产版本** |
+| `develop` | 日常集成;**feature PR 的基线** |
+| `release/x.y.z` | 临时冻结(版本号 / CHANGELOG / README 同步);**发布后删除** |
+| `hotfix/*` | 从 `main` 出发的紧急修复;合回 `main` 并回 `develop` |
 
-**Rules**
+**规则**
 
-- Never push `develop` directly onto `main` — ship via `release/*` → `main` (or hotfix → `main`) only. Do **not** bulk-merge `develop` → `main`; it forks history and breaks post-release sync.
-- Never push directly to `main` or `develop` — always open a PR (GitHub branch protection).
-- Merge `release/*` → `main` with a **merge commit** (not squash) so `main` stays reconcilable with `develop`.
-- Release sequence: cut `release/*` from latest `develop` → PR into `main` → **tag `v*` on main tip only after merge** → delete `release/*` → Actions syncs `main` → `develop` (`sync-main-to-develop.yml`; opens `chore/sync-develop-after-*` on conflict / branch protection).
-- Keep **`main` an ancestor of `develop`** after every release. Do not use legacy `head=main` → `develop` sync PRs.
-- Do **not** push a production tag from a release/feature branch before it is on `main`.
-- Hotfix: branch from `main`, PR to `main` (and tag if shipping), then PR into `develop`.
-- Day-to-day feature work: branch from `develop`, open PR **into `develop`** (not `main`).
-- Human detail: `CONTRIBUTING.md`. Agent publish flow: `.cursor/skills/publish` / `.codebuddy/skills/publish`.
+- 绝不把 `develop` 直接推上 `main`——只能经 `release/*` → `main`(或 hotfix → `main`)发布。**不要**把 `develop` 批量合并到 `main`;那会分叉历史并破坏发布后的同步。
+- 绝不直接 push 到 `main` 或 `develop`——一律开 PR(GitHub 分支保护)。
+- `release/*` → `main` 用 **merge commit**(不要 squash)合并,保证 `main` 与 `develop` 可持续对账。
+- 发布顺序:从最新 `develop` 切 `release/*` → PR 进 `main` → **合并后才在 main 顶端打 `v*` 标签** → 删除 `release/*` → Actions 把 `main` 同步回 `develop`(`sync-main-to-develop.yml`;冲突 / 分支保护时开 `chore/sync-develop-after-*`)。
+- 每次发布后保持 **`main` 是 `develop` 的祖先**。不要用旧式 `head=main` → `develop` 的同步 PR。
+- 在进入 `main` 之前**不要**从 release / feature 分支推生产标签。
+- Hotfix:从 `main` 拉分支,PR 进 `main`(要发布就打标签),然后 PR 进 `develop`。
+- 日常 feature:从 `develop` 拉分支,PR **进 `develop`**(不是 `main`)。
+- 人工细节见 `CONTRIBUTING.md`。Agent 发布流程:`.cursor/skills/publish` / `.codebuddy/skills/publish`。
 
 
-## 13. Communication
+## 13. 沟通规范
 
-- Default to **Chinese** when talking to the user; cite code as `` `path:line` ``.
-- Lead with the conclusion, then the detail; write complete sentences, not telegraphic fragments.
-- Before saying "done", include the verification command and its result (or say why it was not run).
-- Mention out-of-scope issues briefly; do not expand scope unilaterally.
-- **Do not say "done" until the quality gate is green:** if `make all` is not fully green, do not call the work finished.
+- 与用户交流默认用**中文**;代码引用写成 `` `path:line` ``。
+- 先给结论,再给细节;写完整句子,不写电报式碎片。
+- 说"完成"之前,附上验证命令及其结果(或说明为什么没跑)。
+- 范围外的问题简单带过;不要单方面扩大范围。
+- **质量门禁全绿之前不要说"完成":** `make all` 没有全绿,就不能宣布收工。
 
 ---
 
-_This file is a living document — keep it in sync when structure, conventions, or workflow change._
+_本文件是活文档——结构、约定或流程变化时保持同步。_
