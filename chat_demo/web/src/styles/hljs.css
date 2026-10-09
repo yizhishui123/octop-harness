@@ -1,0 +1,66 @@
+/* Trimmed GitHub-dark token colours for highlight.js (avoids importing the
+   whole styles package and keeps the palette aligned with the theme). */
+
+.hljs-comment,
+.hljs-quote {
+  color: #8b949e;
+  font-style: italic;
+}
+
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-literal,
+.hljs-type {
+  color: #ff7b72;
+}
+
+.hljs-string,
+.hljs-regexp,
+.hljs-addition,
+.hljs-attribute,
+.hljs-meta .hljs-string {
+  color: #a5d6ff;
+}
+
+.hljs-number,
+.hljs-variable,
+.hljs-template-variable,
+.hljs-selector-attr,
+.hljs-selector-pseudo {
+  color: #79c0ff;
+}
+
+.hljs-title,
+.hljs-title.class_,
+.hljs-title.function_,
+.hljs-section,
+.hljs-name {
+  color: #d2a8ff;
+}
+
+.hljs-attr,
+.hljs-selector-class,
+.hljs-selector-id,
+.hljs-property {
+  color: #7ee787;
+}
+
+.hljs-built_in,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-link {
+  color: #ffa657;
+}
+
+.hljs-meta,
+.hljs-deletion {
+  color: #ffa198;
+}
+
+.hljs-emphasis {
+  font-style: italic;
+}
+
+.hljs-strong {
+  font-weight: 600;
+}

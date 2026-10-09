@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### 新增
+
+- 新增 `chat_demo/` 演示应用：Vue 3 + FastAPI(SSE) 聊天界面，真实驱动 `HarnessAgentManager`（演示代码，不进发布包与质量门禁）。
+
 ## [1.0.1] - 2026-10-03
 
 ### 新增
