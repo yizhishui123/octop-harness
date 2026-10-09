@@ -1,0 +1,11 @@
+{
+  "hitl": false,
+  "agents": [
+    {
+      "name": "demo",
+      "workspace_dir": "workspace/demo",
+      "default_model": null,
+      "system_prompt": null
+    }
+  ]
+}

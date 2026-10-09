@@ -110,6 +110,7 @@ tests/                      # pytest,与 src 模块一一对应
 examples/                   # 端到端可运行示例(带编号)
 learning/                   # 源码学习课程(16 本中文 notebook;不进质量门禁与发布产物)
 multi_agent_demo/           # 多 agent 示例配置
+chat_demo/                  # Vue 3 + FastAPI(SSE) 聊天界面演示（演示层代码；不进包、门禁与发布产物）
 ```
 
 **改动定位速查:**

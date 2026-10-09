@@ -1,0 +1,13 @@
+# Python
+__pycache__/
+*.pyc
+
+# Node / Vite
+web/node_modules/
+web/dist/
+
+# Local secrets & runtime state
+.env
+agents.json
+workspace/
+logs/
