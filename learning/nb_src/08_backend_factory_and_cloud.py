@@ -2,6 +2,7 @@
 # # 08 · 后端工厂与云存储
 #
 # **学习目标**
+#
 # - 吃透 `resolve_backend` 工厂:spec 四种形态、内置类型表、root_dir/virtual_mode/workspace_dir 的交互规则;
 # - 理解 **composite artifacts 包装**:宿主根场景下 deepagents 卸载为什么要被"改道";
 # - 认识云后端(COS/S3/OSS/OBS/Postgres)的**嵌套键编址** `/.octop/workspaces/<id>/…`;
@@ -81,6 +82,7 @@ show("src/octop_harness/backends/__init__.py", 258, 285)
 
 # %% [markdown]
 # 规则速记:
+#
 # - spec 没固定 root_dir → root=workspace,**无需**包装(卸载天然在工作区里);
 # - root 是宿主 `/` → 包装,卸载改道进工作区;
 # - 云后端无视 root_dir,有自己的编址(见 §4);

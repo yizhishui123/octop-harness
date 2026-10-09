@@ -2,6 +2,7 @@
 # # 03 · 一次对话的完整旅程
 #
 # **学习目标**
+#
 # - 跟着一条消息从 `ChatRequest` 走到流式 token,把 00 的静态地图变成动态体验;
 # - 验证 thread(线程)= checkpointer 的持久化单位:同 thread 历史累积,跨 thread 互不干扰;
 # - 观察一次**真实的工具调用轮次**(脚本化 tool_call + 真实工具执行);
@@ -96,6 +97,7 @@ print("agent 就绪,工作区已种子")
 #
 # 返回值是协议层包装的 dict,`messages` 是**本轮新增**的消息(含工具轮次)。
 # 注意每条消息 `additional_kwargs` 上的两个戳:
+#
 # - `checkpoint_ts`(CheckpointTsMiddleware 盖的时间戳,`aget_history` 的快路径靠它);
 # - `context_usage`(最后一层中间件 ContextUsageMiddleware 的用量快照,05 本细讲)。
 

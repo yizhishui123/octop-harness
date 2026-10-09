@@ -2,6 +2,7 @@
 # # 13 · 记忆系统与 Teams 协作
 #
 # **学习目标**
+#
 # - 吃透记忆的 **L0-L3 分层**(原始事件 → 候选 → 原子/实体 → 摘要)与两种抽取触发;
 # - 理解 **recall 快照/重放**:召回内容如何进提示却不污染 checkpoint;
 # - 现场看会话 JSONL 与记忆工具;
@@ -111,6 +112,7 @@ if jsonl:
 # **提示后缀**(前缀保持供应商缓存友好)。
 #
 # `ask_agent` 两种模式:
+#
 # - `sync`:当场调用目标 agent,结果作为 ToolMessage 返回;
 # - `background`:投递到 **inbox**,宿主的 `TeamProcessor.compose_followup` 组装追问,
 #   在**源线程**上追加一轮调用,再由 `TeamProcessor.on_reply` 推送(ReplyEvent)。

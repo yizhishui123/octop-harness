@@ -2,6 +2,7 @@
 # # 07 · SQL 深潜:三个落点
 #
 # **学习目标**
+#
 # - 澄清一个常见误解:这个库**没有 ORM、没有业务数据库**;SQL 只出现在三个 persistence 落点;
 # - 落点一:LangGraph checkpointer(`checkpoints.sqlite`,AsyncSqliteSaver);
 # - 落点二:octop-memory(`memory.sqlite`)——以及它**兼任 checkpointer** 的"一库两用";
@@ -91,6 +92,7 @@ for name, n in tables.items():
 
 # %% [markdown]
 # 标准的 langgraph checkpointer 三件套:
+#
 # - `checkpoints`:每个 thread 每轮一条,`parent_checkpoint_id` 串成链(时间旅行/回放靠它);
 # - `checkpoint_blobs`:消息内容的去重存储(按 digest);
 # - `checkpoint_writes`:每轮的增量写(channel/idx)。

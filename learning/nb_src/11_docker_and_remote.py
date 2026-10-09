@@ -2,6 +2,7 @@
 # # 11 · 沙箱三:Docker 与远程沙箱
 #
 # **学习目标**
+#
 # - 吃透 DockerSandbox 的**"同路径,两处存在"**设计(刻意不 bind-mount);
 # - 记住资源限额默认值(network=none / 512MB / 1 CPU / 256 pids / sleep infinity);
 # - 理解容器命名三档作用域(agent / user / fixed)与孤儿容器处理;

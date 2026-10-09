@@ -2,6 +2,7 @@
 # # 15 · 扩展生态:Manager 热重建、CLI、插件、MCP、协议、可观测
 #
 # **学习目标(本系列收官)**
+#
 # - Manager 的**热重建**与 agent 的**延迟关闭**(in-flight 保护);
 # - CLI 的**两层管理器**(文件画像 vs 运行时注册表);
 # - 插件系统(plugin.yaml / pip 安装 requires / PluginContext 授权 API);
